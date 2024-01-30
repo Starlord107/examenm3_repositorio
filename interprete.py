@@ -1,8 +1,17 @@
 import biblioteca as c
 
+
+
+
+def longitud_valida(comandos,longitud):
+    partes=comandos.split("-")
+    return len(partes)==longitud
 def comandos_basicos(comandos):
     partes = comandos.split('-')
-    if partes[0].lower() == "addllibre".lower() and len(partes) == 6:
+    accion=partes[0].lower()
+
+    if accion == "addllibre".lower() and longitud_valida(comandos,6):
+
         codi = partes[1]
         titol = partes[2]
         autor = partes[3]
@@ -11,11 +20,16 @@ def comandos_basicos(comandos):
        # codi, titol, autor, genere, numerodepaginas = partes[1:]
 
         c.add_llibre(codi, titol, autor, genere, numerodepaginas)
-    elif partes[0].lower()=="listLlibres".lower():
+
+
+
+
+
+    elif accion=="listLlibres".lower():
 
         c.list_llibres()
 
-    elif partes[0].lower()=="startPrestec".lower()and len(partes)==4:
+    elif accion=="startPrestec".lower()and longitud_valida(comandos,4):
 
         codi=partes[1]
         nombre_alumnes=partes[2]
@@ -23,27 +37,37 @@ def comandos_basicos(comandos):
 
         c.startPrestec(codi,nombre_alumnes,data_prestec)
 
-    elif partes[0].lower()=="endPrestec".lower()and len (partes)==3:
+
+    elif accion=="endPrestec".lower()and longitud_valida(comandos,3):
         codi=partes[1]
         dataretorn=partes[2]
         c.endPrestec(codi,dataretorn)
 
-    elif partes[0].lower()=="listPrestecs".lower():
+
+
+
+
+
+
+
+
+    elif accion=="listPrestecs".lower():
         c.listPrestecs()
 
-    elif partes[0].lower()=="listGenere".lower() and len(partes)==2:
+    elif accion=="listGenere".lower() and longitud_valida(comandos,2):
         genere=partes[1]
         c.listGenere(genere)
 
-    elif partes[0].lower()=="maxLlibre".lower():
+    elif accion=="maxLlibre".lower():
         c.maxLlibre()
 
-    elif partes[0].lower()=="stats".lower():
+    elif accion=="stats".lower():
         c.stats()
 
-    elif partes[0].lower()=="info".lower() and len(partes)==2:
+    elif accion=="info".lower() and longitud_valida(comandos,2):
         nombre_alumno=partes[1].lower()
         c.info(nombre_alumno)
     else:
         print("Error: nº d'arguments incorrecte")
+
 

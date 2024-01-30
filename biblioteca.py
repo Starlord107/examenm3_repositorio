@@ -5,15 +5,19 @@ incidencias={}
 alumnos={}
 incidencias_libros={}
 import datetime as f
-from datetime import  timedelta
+from datetime import *
 from datetime import  date
+def string_datetime(fecha_str):
+    return datetime.strptime(fecha_str,"%d/%m/%Y")
+def datetime_string(fecha):
+    return  fecha.strftime("%d/%m/%Y")
 def add_llibre(codi, titol, autor, genere, numerodepaginas):
 
     if codi in libros:
         print("Este libro ya esta registrado")
     else:
         if not numerodepaginas.isdigit or int(numerodepaginas) <=0:
-            print("error no pueden haver paginas negaticas o con letras")
+            print("error no pueden haver paginas negativas o con letras")
         else:
             libros[codi] = {
                 "titol": titol,
@@ -45,7 +49,7 @@ def startPrestec(codi,nombre_alumnes,data_prestec):
         print("este libro no existe en la biblioteca")
 
     else:
-        if codi  in prestamos:
+        if codi  in prestamos and prestamos[codi]["alquilado"]==True:
             print("Este libro ya esta registrado")
 
 
@@ -54,7 +58,7 @@ def startPrestec(codi,nombre_alumnes,data_prestec):
 
 
 
-            datafinal=f.datetime.strptime(data_prestec,"%d/%m/%Y")
+            datafinal=string_datetime(data_prestec)
 
             prestamos[codi]={
                 "alumno":nombre_alumnes,
@@ -63,17 +67,18 @@ def startPrestec(codi,nombre_alumnes,data_prestec):
                 "incidencia":False
             }
             fechadevolucion=datafinal + timedelta(days=15)
+            fechadevolucion1=datetime_string(fechadevolucion)
+
             if prestamos[codi]["alquilado"] ==True:
                 libros[codi]["alquilado"]=True
                 if  libros[codi]["alquilado"]==True:
                     fechas[codi]={
                         "data_prestec":data_prestec,
-                        "fechadevolucion": fechadevolucion
+                        "fechadevolucion1": fechadevolucion1
 
 
                     }
-                    print (f"Préstec registrat. El llibre s’ha de retornar:{fechadevolucion} ")
-
+                    print (f"Préstec registrat. El llibre s’ha de retornar:{fechadevolucion1} ")
 
 
 def endPrestec(codi,dataretorn):
@@ -85,16 +90,19 @@ def endPrestec(codi,dataretorn):
         print("aquest llibre no esta  llogat ")
 
     else:
-        format_data="%d/%m/%Y"
 
-        datafinal2=f.datetime.strptime(dataretorn,format_data)
+        datafinal2=string_datetime(dataretorn)
+        data_string=prestamos[codi]["data"]
 
-        if prestamos[codi]["data"] > datafinal2:
+
+
+
+        if data_string > datafinal2:
                 print("error no pot tenir una data inferior a la de prestec, no pots tornar un llibre abans de llogarlo")
 
 
 
-        elif fechas[codi]["fechadevolucion"] < datafinal2:
+        elif string_datetime(fechas[codi]["fechadevolucion1"]) < datafinal2:
                 prestamos[codi]["incidencia"]=True
                 prestamos[codi]["alquilado"]=False
                 libros[codi]["alquilado"]=False
@@ -116,11 +124,13 @@ def listPrestecs():
     else:
         hoy = f.datetime.today()
 
+
         salida1 = ""
 
         # Iterar sobre prestamos
         for codi_prestamo, valor_prestamo in prestamos.items():
             # Verificar si el prestamo está en libros y fechas
+         if valor_prestamo["alquilado"]:
             if codi_prestamo in libros and codi_prestamo in fechas:
                 libro = libros[codi_prestamo]
                 nombre = libro["titol"]
@@ -128,21 +138,28 @@ def listPrestecs():
 
                 # Obtener fechas del prestamo y devolución
                 fechainicio1 = fechas[codi_prestamo]["data_prestec"]
-                fechafinal2 = fechas[codi_prestamo]["fechadevolucion"]
+                fechafinal2 = fechas[codi_prestamo]["fechadevolucion1"]
 
                 # Determinar el estado del préstamo
-                estado = ""
 
-                if fechafinal2 < hoy:
-                    estado = "Fora de termini"
-                else:
+                estado = "en termini"
+
+                fechafinal2 = string_datetime(fechas[codi_prestamo]["fechadevolucion1"])
+
+                if fechafinal2 > hoy:
                     estado = "en termini"
 
+
+                else:
+                    estado="fora de termini"
+
+                fechafinal2=datetime_string(fechafinal2)
                 salida1 += f"Libro: {nombre}, Alumno: {nombre_alumno}, Inicio: {fechainicio1}, Fecha fin: {fechafinal2} ({estado})\n"
 
-        print(salida1)
-
-
+        if salida1:
+            print(salida1)
+        else:
+            print("no hay libros en prestamo actualmente")
 
 def listGenere(genere):
     salida_genere=""
@@ -155,7 +172,7 @@ def listGenere(genere):
                 nombre_libro=valor_libro["titol"]
                 autor_libro=valor_libro["autor"]
                 estado_libro=""
-                if valor_libro["alquilado"]:
+                if valor_libro["alquilado"]==False:
                     estado_libro="disponible"
                 else:
                     estado_libro="Alquilado no disponible"
@@ -196,9 +213,10 @@ def stats():
         n_total_incidencias=0
         for clave in prestamos:
             for values in prestamos[clave]:
-                if values=="incidencias":
-                    incidencias==True
-        n_total_incidencias +=1
+                if values=="incidencia" and prestamos[clave]["incidencia"]==True:
+                    n_total_incidencias +=1
+
+
         n_total_paginas=0
         for clave in libros:
             for value in libros[clave]:
@@ -226,7 +244,7 @@ def info(alumno):
                 titol_alumno = libros[codi]["titol"]
                 autor_alumno = libros[codi]["autor"]
                 fechainici_alumno = fechas[codi]["data_prestec"]
-                fechafinal_alumno = fechas[codi]["fechadevolucion"]
+                fechafinal_alumno = fechas[codi]["fechadevolucion1"]
                 salida_libro += f"Llibre: {codi} - {titol_alumno}, Autor: {autor_alumno}, Alumne: {nombre_alumno}, Data inici: {fechainici_alumno}, Data fi: {fechafinal_alumno}\n"
 
             # Verificar incidencias, incluso para libros ya devueltos
@@ -234,9 +252,11 @@ def info(alumno):
                 tiene_incidencias = True
                 nombre_incidencia = libros[codi]["titol"]
                 data_inici_incidencia=fechas[codi]["data_prestec"]
-                data_fi_inici=fechas[codi]["fechadevolucion"]
+                data_fi_inici=fechas[codi]["fechadevolucion1"]
                 data_fora_de_termini = fechas[codi].get("data_incidencia", "No disponible")
-                salida_incidencia += f"Incidencia - Llibre: {codi} - {nombre_incidencia}, , Alumne: {nombre_alumno}, Data inici: {data_inici_incidencia}, Data fi: {data_fi_inici}, Data fora de termini: {data_fora_de_termini}\n"
+                format_data = "%d/%m/%Y"
+                data_fora_de_termini_string=string_datetime(data_fora_de_termini)
+                salida_incidencia += f"Incidencia - Llibre: {codi} - {nombre_incidencia}, , Alumne: {nombre_alumno}, Data inici: {data_inici_incidencia}, Data fi: {data_fi_inici}, Data fora de termini: {data_fora_de_termini_string}\n"
 
     if not tiene_prestamos and not tiene_incidencias:
         print("L'alumne indicat no te cap llibre en préstec ni incidències")
